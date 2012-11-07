@@ -9,11 +9,18 @@ Dependencies:
 
 Usage:
     Simple probe.
-	#./mrinfo <target>
+	# ./mrinfo <target>
     5 seconds timeout
-	#./mrinfo -t 5<target>
+	# ./mrinfo -t 5<target>
     show help
-	./mrinfo -h
+	$ ./mrinfo -h
+
+Output:
+    $ sudo ./mrinfo 192.168.2.2
+    192.168.2.2 [Version  12.4] [Flags: PM]:
+     192.168.2.2 -> 192.168.2.4 [1/0]
+     192.168.2.2 -> 192.168.2.3 [1/0]
+     192.168.13.1 -> 192.168.13.3 [1/0]
 
 License:
     GPLv3

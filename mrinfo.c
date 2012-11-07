@@ -3,7 +3,8 @@
 
 char *target;
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     if (argc < 2)
 	o_error(OUT_HELP);
@@ -11,8 +12,8 @@ int main(int argc, char *argv[])
     /* Get command-line parameters */
     int opt;
     int timeout = 5;
-    char *iface = "";
-    while((opt = getopt(argc, argv, "ht:i:")) != -1) 
+    char *iface;
+    while((opt = getopt(argc, argv, "ht:")) != -1) 
     {
 	switch(opt)
 	{
@@ -23,9 +24,6 @@ int main(int argc, char *argv[])
 		timeout = atoi(optarg);
 		if ((timeout < 1) || (timeout > 30))
 		    o_error(OUT_TIMEOUTVAL);
-		break;
-	    case 'i':
-		iface = optarg;
 		break;
 	    case '?':
 	    default:
@@ -57,14 +55,12 @@ int main(int argc, char *argv[])
 		o_error(OUT_MALLOC);
 	    if ((inet_ntop(p->ai_family, ipaddr, target, INET_ADDRSTRLEN)) == NULL)
 		o_error(OUT_INETNTOP);
-	    /* Determine device to listen on */
-	    if (iface == "")
-		if (get_interface(target, &iface) == -1)
-		    o_error(OUT_NOIFACE);
-	    break;
+		break;
 	}
     }
-    if (iface == "")
+
+    /* Determine device to listen on */
+    if (get_interface(target, &iface) == -1)
 	o_error(OUT_NOIFACE);
 
     /* Start listener */
@@ -73,14 +69,15 @@ int main(int argc, char *argv[])
     const u_char *packet;
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_t *pcap_handle;
-    if ((pcap_handle = pcap_open_live(iface, 4096, 1, 0, errbuf)) == NULL)
+    if ((pcap_handle = pcap_open_live(iface, 4096, 1, timeout*1000, errbuf)) == NULL)
 	o_error(OUT_PCAPOPEN);
 
     /* IGMP Packets coming with target host as source */
     char *filter;
     asprintf(&filter, "src host %s and ip proto 2", target);
 
-    if (pcap_compile(pcap_handle, &program, filter, 0, PCAP_NETMASK_UNKNOWN) == -1 )
+    if (pcap_compile(pcap_handle, &program, filter, 0, PCAP_NETMASK_UNKNOWN) 
+	             == -1 )
 	o_error(OUT_PCAPCOMPILE);
 
     if (pcap_setfilter(pcap_handle, &program) == -1)
@@ -91,11 +88,13 @@ int main(int argc, char *argv[])
     struct dvmrp_rprt *report;
     time_t start_time = time(NULL);
     report = (struct dvmrp_rprt *) malloc(sizeof(struct dvmrp_rprt));
-    while (time(NULL) - start_time >= timeout)
+    while (time(NULL) - start_time <= timeout)
     {
-	packet = pcap_next(pcap_handle, &header);
-	u_char *dvmrp_start = (u_char *) packet + ETHER_HDR_LEN + 
-	                      sizeof(struct ip_hdr);
+	if( (packet = pcap_next(pcap_handle, &header)) == NULL)
+	    o_error(OUT_NORESPONSE);
+	
+	u_char *dvmrp_start = (u_char *) packet + ETHER_HDR_LEN +
+	                       sizeof(struct ip_hdr);
 	if (parse_report(dvmrp_start, header.len - ETHER_HDR_LEN - 
 		         sizeof(struct ip_hdr), report) == 0)
 	{
@@ -162,7 +161,8 @@ parse_report(const u_char *data, unsigned int length, struct dvmrp_rprt *report)
 	if ( (iface->count == 0x00) || ((length - (index - data)) < iface->count * 4) )
 	    return -1;
 	/* Parse the neighbors */
-	iface->neighbors = (struct dvmrp_neighbor *) malloc(sizeof(struct dvmrp_neighbor));
+	iface->neighbors = (struct dvmrp_neighbor *) 
+	                    malloc(sizeof(struct dvmrp_neighbor));
 	neighbor = iface->neighbors;
 	for (i=0; i < iface->count; i++)
 	{
@@ -213,16 +213,16 @@ send_probe(const char *target)
     return 0;
 }
 
-int get_interface(const char *target, char **iface)
+int
+get_interface(const char *target, char **iface)
 {
-    int sd;
-    int i;
+    int sd, i;
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     struct ifconf ifconf;
     struct ifreq ifreq[MAXIFACES]; 
     char ip[INET_ADDRSTRLEN];
-    struct sockaddr_in *address; 
+    struct sockaddr_in *iaddr; 
 
     /* Open the appropriate socket */
     if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -246,9 +246,11 @@ int get_interface(const char *target, char **iface)
     ifconf.ifc_len = sizeof(ifreq);
     if (ioctl(sd, SIOCGIFCONF, &ifconf) == -1)
         o_error(OUT_IOCTL);
-    for (i = 0; i < ifconf.ifc_len / sizeof(ifreq[0]); i++) {
-        address = (struct sockaddr_in *) &ifreq[i].ifr_addr;
-	if (address->sin_addr.s_addr == addr.sin_addr.s_addr) {
+    for (i = 0; i < ifconf.ifc_len / sizeof(ifreq[0]); i++)
+    {
+        iaddr = (struct sockaddr_in *) &ifreq[i].ifr_addr;
+	if (iaddr->sin_addr.s_addr == addr.sin_addr.s_addr)
+	{
 	    *iface = strdup((const char *)&ifreq[i].ifr_ifrn.ifrn_name);
 	    return 0;
 	}

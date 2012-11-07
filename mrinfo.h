@@ -17,6 +17,7 @@
 
 #define MAXIFACES 30
 
+/********************* Data structures ********************/
 struct ip_hdr {
     uint8_t ip_ver_hl;	     /* IP Version + header length		*/
     uint8_t ip_tos;          /* Type of service		    	    	*/
@@ -64,8 +65,6 @@ struct dvmrp_rprt {
 char *find_device(const char *address);
 
 int parse_report(const u_char *packet, unsigned int length, struct dvmrp_rprt *report);
-
-void dump(const unsigned char *packet, const unsigned int length);
 
 int send_probe(const char *target);
 
