@@ -1,0 +1,19 @@
+A similar to Cisco's mrinfo multicast routing information utility for GNU/Linux.
+Written for fun and educational purposes only.
+
+Build:
+    $make
+
+Dependencies:
+    libpcap - responses listener
+
+Usage:
+    Simple probe.
+	#./mrinfo <target>
+    5 seconds timeout
+	#./mrinfo -t 5<target>
+    show help
+	./mrinfo -h
+
+License:
+    GPLv3
