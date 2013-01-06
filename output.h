@@ -21,8 +21,8 @@
 
 #define o_error(msg)                                             \
     do {                                                         \
-	printf ("%s", msg);                                      \
-	exit(EXIT_FAILURE);                                      \
+      printf ("%s", msg);                                        \
+      exit (EXIT_FAILURE);                                       \
     } while (0)
 
-int o_report(struct dvmrp_rprt *report);
+int o_report (struct dvmrp_rprt *report);
