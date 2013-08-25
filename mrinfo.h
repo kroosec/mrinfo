@@ -1,4 +1,7 @@
+#define _GNU_SOURCE     /* asprintf() */
+
 #include <sys/types.h>
+#include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
@@ -9,6 +12,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <time.h>
 
 #define ETHER_ADDR_LEN 6
 #define ETHER_HDR_LEN 14

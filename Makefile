@@ -1,2 +1,4 @@
 all:
-	gcc -g -o mrinfo mrinfo.c output.c -lpcap
+	gcc -Wall -Wextra -o mrinfo mrinfo.c output.c -lpcap
+clean:
+	rm -fv ./mrinfo ./mrinfo.o ./output.o

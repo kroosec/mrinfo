@@ -1,6 +1,6 @@
 /* Common output error messages */
 #define OUT_TIMEOUTVAL "timeout should be a value between 1 and 30.\n"
-#define OUT_HELP "Usage: mrinfo [-t timeout] -i interface target\n\n"
+#define OUT_HELP "Usage: mrinfo [-t timeout] target\n\n"
 #define OUT_PCAPOPEN "pcap_open_live() error.\n"
 #define OUT_PCAPCOMPILE "pcap_compile() error.\n"
 #define OUT_PCAPSETFILTER "pcap_setfilter() error.\n"

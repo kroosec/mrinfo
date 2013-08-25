@@ -29,20 +29,19 @@ main (int argc, char *argv[])
           o_error (OUT_HELP);
           break;
       }
-  if (argc !=  optind + 1)
+  if (argc != optind + 1)
     o_error (OUT_HELP);
   target = argv[optind];
 
   /* Determine the target address. */
   struct addrinfo hints, *targetinfo, *p;
-  int rv;
   memset (&hints, 0, sizeof (hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = 0;
   if ((getaddrinfo (target, "80" , &hints, &targetinfo)) != 0)
     o_error (OUT_GETADDRINFO);
-  for(p = targetinfo; p != NULL; p = p->ai_next)
+  for (p = targetinfo; p != NULL; p = p->ai_next)
     {
       if (p->ai_family == AF_INET)
         {
@@ -70,7 +69,7 @@ main (int argc, char *argv[])
   pcap_t *pcap_handle;
   if ((pcap_handle = pcap_open_live (iface, 4096, 1, timeout*1000, errbuf))
       == NULL)
-    o_error(OUT_PCAPOPEN);
+    o_error (OUT_PCAPOPEN);
 
   /* IGMP Packets coming with target host as source */
   char *filter;
@@ -81,16 +80,16 @@ main (int argc, char *argv[])
     o_error (OUT_PCAPCOMPILE);
 
   if (pcap_setfilter (pcap_handle, &program) == -1)
-    o_error(OUT_PCAPSETFILTER);
+    o_error (OUT_PCAPSETFILTER);
   if (send_probe (target) == -1)
-    o_error(OUT_SEND);
+    o_error (OUT_SEND);
 
   struct dvmrp_rprt *report;
-  time_t start_time = time(NULL);
+  time_t start_time = time (NULL);
   report = (struct dvmrp_rprt *) malloc (sizeof (struct dvmrp_rprt));
   while (time (NULL) - start_time <= timeout)
     {
-      if( (packet = pcap_next (pcap_handle, &header)) == NULL)
+      if ( (packet = pcap_next (pcap_handle, &header)) == NULL)
         o_error (OUT_NORESPONSE);
 
       u_char *dvmrp_start = (u_char *) packet + ETHER_HDR_LEN +
@@ -117,7 +116,7 @@ parse_report (const u_char *data, unsigned int length,
   struct dvmrp_iface *iface;
   /* Length of the packet should be multiple of 4 and > 8 */
   if ((length <= 8) || (length % 4 != 0))
-    o_error(OUT_RLENGTH);
+    o_error (OUT_RLENGTH);
 
   memcpy ((void *) &report->hdr, data, sizeof (report->hdr));
   /* Check that the IGMP type is DVMRP */
@@ -202,35 +201,35 @@ send_probe (const char *target)
     o_error (OUT_SOCKET);
 
   /* Initiate fields */
-  bzero(&dstaddr, sizeof (dstaddr));
+  bzero (&dstaddr, sizeof (dstaddr));
   if (inet_pton (AF_INET, target, &dstaddr.sin_addr) <=0)
     o_error (OUT_INETPTON);
 
-  probe.type = 0x13;            /* Type: DVMRP */
-  probe.code = 0x05;            /* Code: Ask Neighbors2 (Probe) */
-  probe.chksum = htons(0xe8e4); /* No need to calculate it */
-  probe.reserved = 0x00;        /* Reserved field */
-  probe.caps = 0x0a;            /* Capabilities field */
-  probe.minor = 0x04;           /* Minor version */
-  probe.major = 0x0c;           /* Major version */
+  probe.type = 0x13;                /* Type: DVMRP */
+  probe.code = 0x05;                /* Code: Ask Neighbors2 (Probe) */
+  probe.chksum = htons (0xe8e4);    /* No need to calculate it */
+  probe.reserved = 0x00;            /* Reserved field */
+  probe.caps = 0x0a;                /* Capabilities field */
+  probe.minor = 0x04;               /* Minor version */
+  probe.major = 0x0c;               /* Major version */
 
   /* Send the probe */
   if (sendto (sd, &probe, sizeof (probe), 0, (struct sockaddr *) &dstaddr,
               sizeof (dstaddr))
       < 0)
-    o_error(OUT_SENDTO);
+    o_error (OUT_SENDTO);
   return 0;
 }
 
 int
 get_interface (const char *target, char **iface)
 {
-  int sd, i;
+  int sd;
+  unsigned int i;
   struct sockaddr_in addr;
-  socklen_t addrlen = sizeof(addr);
+  socklen_t addrlen = sizeof (addr);
   struct ifconf ifconf;
   struct ifreq ifreq[MAXIFACES];
-  char ip[INET_ADDRSTRLEN];
   struct sockaddr_in *iaddr;
 
   /* Open the appropriate socket */
